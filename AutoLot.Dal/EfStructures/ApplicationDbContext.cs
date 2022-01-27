@@ -106,8 +106,8 @@ namespace AutoLot.Dal.EfStructures
                         pd.Property<string>(nameof(Person.FirstName))
                             .HasColumnName(nameof(Person.FirstName))
                             .HasColumnType("nvarchar(50)");
-                        pd.Property<string>(nameof(Person.FirstName))
-                            .HasColumnName(nameof(Person.FirstName))
+                        pd.Property<string>(nameof(Person.LastName))
+                            .HasColumnName(nameof(Person.LastName))
                             .HasColumnType("nvarchar(50)");
                         pd.Property<string>(nameof(Person.FullName))
                             .HasColumnName(nameof(Person.FullName))
