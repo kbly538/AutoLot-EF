@@ -16,6 +16,10 @@ namespace AutoLot.Models.Entities
         [ForeignKey(nameof(CustomerId))]
 		[InverseProperty(nameof(Customer.CreditRisks))]
         public Customer? CustomerNavigation { get; set; }
-        
+
+        [NotMapped]
+        public string ax { get; set; }
+
     }
+
 }
