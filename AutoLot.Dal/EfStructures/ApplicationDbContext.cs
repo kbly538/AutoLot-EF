@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using AutoLot.Models.Entities;
+using AutoLot.Models.Entities.Owned;
 
 namespace AutoLot.Dal.EfStructures
 {
@@ -12,64 +13,75 @@ namespace AutoLot.Dal.EfStructures
         {
         }
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
-        public virtual DbSet<CreditRisk> CreditRisks { get; set; } = null!;
-        public virtual DbSet<Customer> Customers { get; set; } = null!;
-        public virtual DbSet<Car> Inventories { get; set; } = null!;
-        public virtual DbSet<Make> Makes { get; set; } = null!;
-        public virtual DbSet<Order> Orders { get; set; } = null!;
+        public DbSet<SeriLogEntry>? SeriLogs { get; set; }
+        public DbSet<CreditRisk>? CreditRisks { get; set; }
+        public DbSet<Customer>? Customers { get; set; } 
+        public DbSet<Car>? Cars { get; set; }
+        public DbSet<Make>? Makes { get; set; }
+        public DbSet<Order>? Orders { get; set; } 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<SeriLogEntry>(entity =>
+            {
+                entity.Property(e => e.Properties).HasColumnType("Xml");
+                entity.Property(e => e.TimeStamp).HasDefaultValueSql("GetDate()");
+            });
+
+
             modelBuilder.Entity<CreditRisk>(entity =>
             {
-                entity.HasIndex(e => e.CustomerId, "IX_CreditRisks_CustomerId");
 
-                entity.Property(e => e.FirstName).HasMaxLength(50);
-
-                entity.Property(e => e.LastName).HasMaxLength(50);
-
-                entity.Property(e => e.TimeStamp)
-                    .IsRowVersion()
-                    .IsConcurrencyToken();
-
-                entity.HasOne(d => d.Customer)
-                    .WithMany(p => p.CreditRisks)
+                entity.HasOne(d => d.CustomerNavigation)
+                    .WithMany(p => p!.CreditRisks)
                     .HasForeignKey(d => d.CustomerId)
                     .HasConstraintName("FK_CreditRisks_Customers");
+
+
+
+                entity.OwnsOne(o => o.PersonalInformation,
+                    pd =>
+                    {
+                        pd.Property<string>(nameof(Person.FirstName))
+                            .HasColumnName(nameof(Person.FirstName))
+                            .HasColumnType("nvarchar(50)");
+                        pd.Property<string>(nameof(Person.FirstName))
+                            .HasColumnName(nameof(Person.FirstName))
+                            .HasColumnType("nvarchar(50");
+                        pd.Property<string>(nameof(Person.FullName))
+                            .HasColumnName(nameof(Person.FullName))
+                            .HasComputedColumnSql("[LastName] + ', ' + [FirstName]");
+                    });
+
+//                entity.HasIndex(e => e.CustomerId, "IX_CreditRisks_CustomerId");
+
             });
 
             modelBuilder.Entity<Customer>(entity =>
             {
-                entity.Property(e => e.FirstName).HasMaxLength(50);
-
-                entity.Property(e => e.LastName).HasMaxLength(50);
-
-                entity.Property(e => e.TimeStamp)
-                    .IsRowVersion()
-                    .IsConcurrencyToken();
+                entity.OwnsOne(o => o.PersonalInformation,
+                    pd =>
+                    {
+                        pd.Property(p => p.FirstName).HasColumnName(nameof(Person.FirstName));
+                        pd.Property(p => p.LastName).HasColumnName(nameof(Person.LastName));
+                        pd.Property(p => p.FullName).HasColumnName(nameof(Person.FullName))
+                            .HasComputedColumnSql("[LastName] + ', ' + [FirstName]");
+                    });
             });
 
             modelBuilder.Entity<Car>(entity =>
             {
-                entity.ToTable("Inventory");
 
-                entity.HasIndex(e => e.MakeId, "IX_Inventory_MakeId");
+                entity.HasQueryFilter(c => c.IsDrivable);
+                entity.Property(p => p.IsDrivable).HasField("_isDrivable").HasDefaultValue(true);
 
-                entity.Property(e => e.Color).HasMaxLength(50);
-
-                entity.Property(e => e.PetName).HasMaxLength(50);
-
-                entity.Property(e => e.TimeStamp)
-                    .IsRowVersion()
-                    .IsConcurrencyToken();
-
-                entity.HasOne(d => d.Make)
-                    .WithMany(p => p.Inventories)
+                entity.HasOne(d => d.MakeNavigation)
+                    .WithMany(p => p.Cars)
                     .HasForeignKey(d => d.MakeId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Make_Inventory");
@@ -77,35 +89,28 @@ namespace AutoLot.Dal.EfStructures
 
             modelBuilder.Entity<Make>(entity =>
             {
-                entity.Property(e => e.Name).HasMaxLength(50);
-
-                entity.Property(e => e.TimeStamp)
-                    .IsRowVersion()
-                    .IsConcurrencyToken();
+                entity.HasMany(e => e.Cars)
+                    .WithOne(c => c.MakeNavigation!)
+                    .HasForeignKey(k => k.MakeId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_Make_Inventory");
             });
 
             modelBuilder.Entity<Order>(entity =>
             {
-                entity.HasIndex(e => e.CarId, "IX_Orders_CarId");
-
-                entity.HasIndex(e => new { e.CustomerId, e.CarId }, "IX_Orders_CustomerId_CarId")
-                    .IsUnique();
-
-                entity.Property(e => e.TimeStamp)
-                    .IsRowVersion()
-                    .IsConcurrencyToken();
-
-                entity.HasOne(d => d.Car)
-                    .WithMany(p => p.Orders)
+                entity.HasOne(d => d.CarNavigation)
+                    .WithMany(p => p!.Orders)
                     .HasForeignKey(d => d.CarId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Orders_Inventory");
 
-                entity.HasOne(d => d.Customer)
-                    .WithMany(p => p.Orders)
+                entity.HasOne(d => d.CustomerNavigation)
+                    .WithMany(p => p!.Orders)
                     .HasForeignKey(d => d.CustomerId)
                     .HasConstraintName("FK_Orders_Customers");
             });
+
+            modelBuilder.Entity<Order>().HasQueryFilter(e => e.CarNavigation!.IsDrivable);
 
             OnModelCreatingPartial(modelBuilder);
         }
