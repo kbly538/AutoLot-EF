@@ -13,10 +13,7 @@ namespace AutoLot.Models.Entities
     [Index(nameof(MakeId), Name = "IX_Inventory_MakeId")]
     public partial class Car : BaseEntity
     {
-        public Car()
-        {
-            Orders = new HashSet<Order>();
-        }
+
         [Required]
         [DisplayName("Make")]
         public int MakeId { get; set; }
