@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonSnappableTypes\CommonSnappableTypes.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RootNamespace>VBSnapIn</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="copy $(TargetPath) $(SolutionDir)MyExtendableApp\$(OutDir)$(TargetFileNa me) /Y &#xD;&#xA;copy $(TargetPath) $(SolutionDir)MyExtendableApp\$(TargetFileName) /Y" />
+	</Target>
+
+
+</Project>
