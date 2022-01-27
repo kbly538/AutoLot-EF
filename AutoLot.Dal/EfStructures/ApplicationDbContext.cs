@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using AutoLot.Models.Entities;
 using AutoLot.Models.Entities.Owned;
+using Microsoft.EntityFrameworkCore.Storage;
+using AutoLot.Dal.Exceptions;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace AutoLot.Dal.EfStructures
 {
@@ -16,9 +19,62 @@ namespace AutoLot.Dal.EfStructures
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
+            base.SavingChanges += (sender, args) =>
+			{
+				Console.WriteLine($"Saving to {((ApplicationDbContext)sender)!.Database!.GetConnectionString()}");
+
+
+			};
+
+            base.SavedChanges += (sender, args) =>
+            {
+                Console.WriteLine($"Saved {args!.EntitiesSavedCount} changes to {((ApplicationDbContext)sender)!.Database!.GetConnectionString()}");
+            };
+
+            base.SaveChangesFailed += (sender, args) => 
+            {
+                Console.WriteLine($"An exception occured {args.Exception.Message} entites.");
+            };
+
+            ChangeTracker.Tracked += ChangeTracker_Tracked;
+            ChangeTracker.StateChanged += ChangeTracker_StateChanged;
+
+
         }
 
-        public DbSet<SeriLogEntry>? SeriLogs { get; set; }
+		private void ChangeTracker_StateChanged(object? sender, EntityStateChangedEventArgs e)
+		{
+            if (e.Entry.Entity is not Car c)
+			{
+                return;
+			}
+            var action = string.Empty;
+            Console.WriteLine($"Car {c.PetName} was {e.OldState} before state changed to {e.NewState}");
+            switch (e.NewState)
+			{
+                case EntityState.Unchanged:
+                    action = e.OldState switch
+                    {
+                        EntityState.Added => "Added",
+                        EntityState.Modified => "Edited",
+                        _ => action
+                    };
+                    Console.WriteLine($"The object was {action}");
+                    break;
+                 
+			}
+		}
+
+		private void ChangeTracker_Tracked(object? sender, EntityTrackedEventArgs e)
+		{
+            var source = (e.FromQuery) ? "Database" : "Code";
+            if (e.Entry.Entity is Car c)
+			{
+                Console.WriteLine($"Car entity {c.PetName} was added from {source}");
+			}
+        }
+
+		public DbSet<SeriLogEntry>? SeriLogs { get; set; }
         public DbSet<CreditRisk>? CreditRisks { get; set; }
         public DbSet<Customer>? Customers { get; set; } 
         public DbSet<Car>? Cars { get; set; }
@@ -116,5 +172,31 @@ namespace AutoLot.Dal.EfStructures
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
-    }
+
+		public override int SaveChanges()
+		{
+			try
+			{
+                return base.SaveChanges();
+
+			}
+            catch (DbUpdateConcurrencyException ex)
+			{
+                // log and handle internally
+                throw new CustomConcurrencyException("A concurrency error occured.", ex);
+			}
+            catch (RetryLimitExceededException ex)
+			{
+                throw new CustomRetryLimitExceededException("There is a problem with SQL server.", ex);
+			}
+            catch (DbUpdateException ex) 
+            {
+                throw new CustomDbUpdateException("An error occured updating the database.", ex);
+            } 
+            catch (Exception ex)
+			{
+                throw new CustomException("An error occured updating the database.", ex);
+			}
+		}
+	}
 }
