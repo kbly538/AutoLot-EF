@@ -1,22 +1,22 @@
-﻿using System;
+﻿using AutoLot.Models.Entities.Base;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoLot.Models.Entities
 {
-    public partial class Customer
+    [Table("Customers", Schema = "dbo")]
+    public partial class Customer : BaseEntity
     {
         public Customer()
         {
             CreditRisks = new HashSet<CreditRisk>();
             Orders = new HashSet<Order>();
         }
-
-        public int Id { get; set; }
-        public string FirstName { get; set; } = null!;
-        public string LastName { get; set; } = null!;
-        public byte[]? TimeStamp { get; set; }
-
-        public virtual ICollection<CreditRisk> CreditRisks { get; set; }
-        public virtual ICollection<Order> Orders { get; set; }
+            
+        [InverseProperty(nameof(CreditRisk.Customer))]
+        public ICollection<CreditRisk> CreditRisks { get; set; }
+        [InverseProperty(nameof(Order.Customer))]
+        public ICollection<Order> Orders { get; set; }
     }
 }
