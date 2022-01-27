@@ -19,7 +19,7 @@ namespace AutoLot.Dal.EfStructures
 
         public virtual DbSet<CreditRisk> CreditRisks { get; set; } = null!;
         public virtual DbSet<Customer> Customers { get; set; } = null!;
-        public virtual DbSet<Inventory> Inventories { get; set; } = null!;
+        public virtual DbSet<Car> Inventories { get; set; } = null!;
         public virtual DbSet<Make> Makes { get; set; } = null!;
         public virtual DbSet<Order> Orders { get; set; } = null!;
 
@@ -54,7 +54,7 @@ namespace AutoLot.Dal.EfStructures
                     .IsConcurrencyToken();
             });
 
-            modelBuilder.Entity<Inventory>(entity =>
+            modelBuilder.Entity<Car>(entity =>
             {
                 entity.ToTable("Inventory");
 

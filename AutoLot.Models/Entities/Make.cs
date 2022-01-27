@@ -7,13 +7,13 @@ namespace AutoLot.Models.Entities
     {
         public Make()
         {
-            Inventories = new HashSet<Inventory>();
+            Inventories = new HashSet<Car>();
         }
 
         public int Id { get; set; }
         public string Name { get; set; } = null!;
         public byte[]? TimeStamp { get; set; }
 
-        public virtual ICollection<Inventory> Inventories { get; set; }
+        public virtual ICollection<Car> Inventories { get; set; }
     }
 }
