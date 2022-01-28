@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AutoLot.Dal.Repos.Interfaces
 {
-	public interface ICrediteRiskRepo : IRepo<CreditRisk>
+	public interface ICreditRiskRepo : IRepo<CreditRisk>
 	{
 	}
 }
