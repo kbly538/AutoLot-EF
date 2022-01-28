@@ -1,98 +1,67 @@
-﻿using AutoLot.Dal.Repos.Interfaces;
+﻿using AutoLot.Dal.EfStructures;
+using AutoLot.Dal.Repos.Base;
+using AutoLot.Dal.Repos.Interfaces;
 using AutoLot.Models.Entities;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace AutoLot.Dal.Repos
 {
-	internal class CarRepo : ICarRepo
+	public class CarRepo : BaseRepo<Car>, ICarRepo
 	{
-		public int Add(Car entity, bool persist = true)
-		{
-			throw new NotImplementedException();
-		}
+		public CarRepo(ApplicationDbContext context) : base(context){}
 
-		public int AddRange(IEnumerable<Car> entities, bool persist = true)
-		{
-			throw new NotImplementedException();
-		}
-
-		public int Delete(int id, byte[] timeStamp, bool persist = true)
-		{
-			throw new NotImplementedException();
-		}
-
-		public int Delete(Car entity, bool persist = true)
-		{
-			throw new NotImplementedException();
-		}
-
-		public int DeleteRange(IEnumerable<Car> entities, bool persist = true)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void Dispose()
-		{
-			throw new NotImplementedException();
-		}
-
-		public void ExecuteQuery(string sql, object[] sqlParametersObjects)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Car? Find(int? id)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Car? FindAsNoTracking(int id)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Car? FindIgnoreQueryFilters(int id)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IEnumerable<Car> GetAll()
-		{
-			throw new NotImplementedException();
-		}
+		public CarRepo(DbContextOptions<ApplicationDbContext> options) : base(options){}
 
 		public IEnumerable<Car> GetAllBy(int makeId)
 		{
-			throw new NotImplementedException();
-		}
-
-		public IEnumerable<Car> GetAllIgnoreQueryFilters()
-		{
-			throw new NotImplementedException();
+			return Table.Where(c => c.Id == makeId).Include(c => c.MakeNavigation).OrderBy(o => o.PetName);
 		}
 
 		public string GetPetName(int id)
 		{
-			throw new NotImplementedException();
+			var parameterId = new SqlParameter
+			{
+				ParameterName = "@carId",
+				SqlDbType = SqlDbType.Int,
+				Value = id
+			};
+
+			var parameterName = new SqlParameter
+			{
+				ParameterName = "@petName",
+				SqlDbType = SqlDbType.NVarChar,
+				Size = 50,
+				Direction = ParameterDirection.Input
+
+			};
+
+			_ = Context.Database.ExecuteSqlRaw(
+				"EXEC [dbo].[GetPetName] @carId, @petName OUTPUT", parameterId, parameterName);
+			return (string) parameterName.Value;
+
 		}
 
-		public int SaveChanges()
+		public override Car? Find(int? id)
 		{
-			throw new NotImplementedException();
+			return Table.IgnoreQueryFilters().Where(c => c.Id == id).Include(m => m.MakeNavigation).FirstOrDefault();
 		}
 
-		public int Update(Car entity, bool persist = true)
+		public override IEnumerable<Car> GetAll()
 		{
-			throw new NotImplementedException();
+			return Table.Include(c => c.MakeNavigation).OrderBy(o => o.PetName);
 		}
 
-		public int UpdateRange(IEnumerable<Car> entities, bool persist = true)
+		public override IEnumerable<Car> GetAllIgnoreQueryFilters()
 		{
-			throw new NotImplementedException();
+			return Table.Include(c => c.MakeNavigation).OrderBy(o => o.PetName).IgnoreQueryFilters();
 		}
+
 	}
 }
