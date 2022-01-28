@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AutoLot.Dal.Repos.Base;
+using AutoLot.Models.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,9 @@ using System.Threading.Tasks;
 
 namespace AutoLot.Dal.Repos.Interfaces
 {
-	public interface ICarRepo
+	public interface ICarRepo : IRepo<Car>
 	{
+		IEnumerable<Car> GetAllBy(int makeId); 
+		string GetPetName(int id);
 	}
 }
