@@ -7,14 +7,24 @@ using AutoLot.Models.Entities.Owned;
 using Microsoft.EntityFrameworkCore.Storage;
 using AutoLot.Dal.Exceptions;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using AutoLot.Models.ViewModels;
 
 namespace AutoLot.Dal.EfStructures
 {
     public partial class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext()
-        {
-        }
+
+        public DbSet<SeriLogEntry>? SeriLogs { get; set; }
+        public DbSet<CreditRisk>? CreditRisks { get; set; }
+        public DbSet<Customer>? Customers { get; set; }
+        public DbSet<Car>? Cars { get; set; }
+        public DbSet<Make>? Makes { get; set; }
+        public DbSet<Order>? Orders { get; set; }
+        public DbSet<CustomerOrderViewModel> CustomerOrderViewModels  { get; set; }
+
+
+        
+        public ApplicationDbContext(){}
 
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -74,15 +84,16 @@ namespace AutoLot.Dal.EfStructures
 			}
         }
 
-		public DbSet<SeriLogEntry>? SeriLogs { get; set; }
-        public DbSet<CreditRisk>? CreditRisks { get; set; }
-        public DbSet<Customer>? Customers { get; set; } 
-        public DbSet<Car>? Cars { get; set; }
-        public DbSet<Make>? Makes { get; set; }
-        public DbSet<Order>? Orders { get; set; } 
+		
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<CustomerOrderViewModel>(entity =>
+            {
+                // Overrides annotation
+                entity.HasNoKey().ToView("CustomerOrderView", "dbo");
+            });
+
             modelBuilder.Entity<SeriLogEntry>(entity =>
             {
                 entity.Property(e => e.Properties).HasColumnType("Xml");
