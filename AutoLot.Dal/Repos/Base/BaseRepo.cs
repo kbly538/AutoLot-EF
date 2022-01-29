@@ -30,7 +30,7 @@ namespace AutoLot.Dal.Repos.Base
 			_disposeContext = true;
 		}
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Dispose(true);
 			GC.SuppressFinalize(this);

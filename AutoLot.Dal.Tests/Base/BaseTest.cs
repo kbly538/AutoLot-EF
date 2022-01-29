@@ -21,7 +21,7 @@ namespace AutoLot.Dal.Tests.Base
 			Context = TestHelpers.GetContext(Configuration);
 		}
 		
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Context.Dispose();
 		}

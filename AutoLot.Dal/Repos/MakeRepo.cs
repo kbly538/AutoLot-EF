@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace AutoLot.Dal.Repos
 {
-	internal class MakeRepo : BaseRepo<Make>, IMakeRepo
+	public class MakeRepo : BaseRepo<Make>, IMakeRepo
 	{
 		public MakeRepo(ApplicationDbContext context) : base(context)
 		{

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace AutoLot.Dal.Repos
 {
-	internal class OrderRepo : BaseRepo<Order>, IOrderRepo
+	public class OrderRepo : BaseRepo<Order>, IOrderRepo
 	{
 		public OrderRepo(ApplicationDbContext context) : base(context)
 		{
