@@ -72,6 +72,28 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 
 		}
 
+		[Fact]
+		public void ShouldSortByLastNameThenFirstName()
+		{
+			var query = Context.Customers.OrderBy(c => c.PersonalInformation.LastName)
+				.ThenBy(c => c.PersonalInformation.FirstName);
+			var qs = query.ToQueryString();
+			var customers = query.ToList();
+			if (customers.Count <= 1) { return;  }
+			for (int x = 0; x < customers.Count - 1; x++)
+			{
+				var pi = customers[x].PersonalInformation;
+				var pi2 = customers[x + 1].PersonalInformation;
+				
+				var compareLastName = string.Compare(pi.LastName, pi2.LastName, StringComparison.CurrentCultureIgnoreCase);
+				Assert.True(compareLastName <= 0);
+				if (compareLastName != 0) continue;
+				
+				var compareFirstName = string.Compare(pi.FirstName, pi2.FirstName, StringComparison.CurrentCultureIgnoreCase);
+				Assert.True(compareFirstName <= 0);
+			}
+		}
+
 
 
 
