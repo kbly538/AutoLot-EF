@@ -19,7 +19,7 @@ namespace AutoLot.Dal.Initialization
 		    new() { Id = 2, PersonalInformation = new() { FirstName = "Matt", LastName = "Walton" } }, 
 			new() { Id = 3, PersonalInformation = new() { FirstName = "Steve", LastName = "Hagen" } }, 
 			new() { Id = 4, PersonalInformation = new() { FirstName = "Pat", LastName = "Walton" } }, 
-			new() { Id = 5, PersonalInformation = new() { FirstName = "Bad", LastName = "Customer" } }, 
+			new() { Id = 5, PersonalInformation = new() { FirstName = "Bad", LastName = "Customer" } }
 		};
 
 		public static List<Make> Makes => new() 
@@ -43,7 +43,7 @@ namespace AutoLot.Dal.Initialization
 			new() { Id = 7, MakeId = 5, Color = "Pink", PetName = "Pinky" },
 			new() { Id = 8, MakeId = 6, Color = "Black", PetName = "Pete" },
 			new() { Id = 9, MakeId = 4, Color = "Brown", PetName = "Brownie" },
-			new() { Id = 10, MakeId = 1, Color = "Rust", PetName = "Lemon", IsDrivable = false },
+			new() { Id = 10, MakeId = 1, Color = "Rust", PetName = "Lemon", IsDrivable = false }
 		};
 
 		public static List<Order> Orders => new() 
@@ -52,7 +52,7 @@ namespace AutoLot.Dal.Initialization
 			new() { Id = 2, CustomerId = 2, CarId = 1 }, 
 			new() { Id = 3, CustomerId = 3, CarId = 4 }, 
 			new() { Id = 4, CustomerId = 4, CarId = 7 }, 
-			new() { Id = 5, CustomerId = 5, CarId = 10 }, 
+			new() { Id = 5, CustomerId = 5, CarId = 10 }
 		};
 
 		public static List<CreditRisk> CreditRisks => new() 
@@ -107,7 +107,7 @@ namespace AutoLot.Dal.Initialization
 				   table.AddRange(records);
 				   context.SaveChanges();
 				   context.Database.ExecuteSqlRaw(
-					   $"SET IDENTITY_INSERT {metaData?.GetSchema()}.{metaData.GetTableName()} OFF");
+					   $"SET IDENTITY_INSERT {metaData.GetSchema()}.{metaData.GetTableName()} OFF");
 				   transaction.Commit();
 			   } catch (Exception ex)
 			   {

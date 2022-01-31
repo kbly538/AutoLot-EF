@@ -29,8 +29,11 @@ namespace AutoLot.Dal.Initialization
 
 			};
 
+
+
 			foreach (var entityName in entities)
 			{
+				Console.WriteLine(entityName);
 				var entity = context.Model.FindEntityType(entityName);
 				var tableName = entity.GetTableName();
 				var schemaName = entity.GetSchema();

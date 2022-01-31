@@ -19,7 +19,7 @@ namespace AutoLot.Dal.Repos.Base
 
 		protected BaseRepo(ApplicationDbContext context)
 		{
-			Context = Context;
+			Context = context;
 			Table = Context.Set<T>();
 			_disposeContext = false;
 		}
