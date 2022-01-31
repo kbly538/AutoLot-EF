@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -98,12 +99,12 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 		public void ShouldSortByFirstNameThenLastNameUsingReverse()
 		{
 			var query = Context.Customers.OrderBy(o => o.PersonalInformation.LastName)
-				.OrderBy(o => o.PersonalInformation.FirstName)
+				.ThenBy(o => o.PersonalInformation.FirstName)
 				.Reverse();
 			var qs = query.ToQueryString();
 			var customers = query.ToList();
 			if (customers.Count <= 1) { return; }
-			for (int i = 0; i < customers.Count; i++)
+			for (int i = 0; i < customers.Count - 1; i++)
 			{
 				var pi1 = customers[i].PersonalInformation;
 				var pi2 = customers[i + 1].PersonalInformation;
@@ -114,6 +115,82 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 				Assert.True(compareFirstName >= 0);
 			}
 		}
+
+		[Fact]
+		public void GetFirstMatchingRecordDatabaseOrder()
+		{
+			var customer = Context.Customers.First();
+			Assert.Equal(1, customer.Id);
+		}
+
+		[Fact]
+		public void GetFirstMatchingRecordNameOrder()
+		{
+			var customer = Context.Customers.OrderBy(o => o.PersonalInformation.LastName)
+				.ThenBy(o => o.PersonalInformation.FirstName).First();
+			Assert.Equal(1, customer.Id);
+		}
+
+		[Fact]
+		public void FirstShouldThrowExceptionIfNoneMatch()
+		{
+			Assert.Throws<InvalidOperationException>(()=>Context.Customers.First(x=> x.Id == 10));
+		}
+
+		[Fact]
+		public void FirstOrDefaultShouldReturnDefaultIfNoneMatch()
+		{
+			Expression<Func<Customer, bool>> expression = x => x.Id == 10;
+			var customer = Context.Customers.FirstOrDefault(expression);
+
+		}
+
+		[Fact]
+		public void GetLastMatchingRecordNameOrder()
+		{
+			var customer = Context.Customers
+				.OrderBy(o => o.PersonalInformation.LastName)
+				.ThenBy(o => o.PersonalInformation.FirstName)
+				.Last();
+			Assert.Equal(4, customer.Id);
+		}
+
+		[Fact]
+		public void GetOneMatchingRecordWithSingle()
+		{
+			var customer = Context.Customers.Single(x => x.Id == 1);
+			Assert.Equal(1, customer.Id);
+		}
+
+
+		[Fact]
+		public void SingleShouldThrowExceptionIfNoneMatch()
+		{
+			Assert.Throws<InvalidOperationException>(() => Context.Customers.Single(x => x.Id == 10));
+		}
+
+		[Fact]
+		public void SingleShouldThrowExceptionIfMoreThanOneMatch()
+		{
+			Assert.Throws<InvalidOperationException>(() => Context.Customers.Single());
+		}
+
+		[Fact]
+		public void SingleOrDEfaultShouldThrowExceptionIfMoreThanOneMatch()
+		{
+			Assert.Throws<InvalidOperationException>(() => Context.Customers.SingleOrDefault());
+		}
+		
+		[Fact]
+		public void SingleOrDEfaultShouldReturnDefaultIfNoneMatch()
+		{
+			Expression<Func<Customer, bool>> expression = x => x.Id == 10;
+			var customer = Context.Customers.SingleOrDefault(expression);
+			Assert.Null(customer);
+		}
+
+
+
 
 
 
