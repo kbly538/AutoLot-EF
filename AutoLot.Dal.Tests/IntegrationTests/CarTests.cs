@@ -132,6 +132,56 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 			Assert.Equal(carCount, make.Cars.Count());
 		}
 
+		[Fact]
+		public void ShouldNotGetTheLemondsFromUsingSql()
+		{
+			var entity = Context.Model.FindEntityType($"{typeof(Car).FullName}");
+			var table = entity.GetTableName();
+			var schema = entity.GetSchema();
+			var cars = Context.Cars.FromSqlRaw($"SELECT * FROM {schema}.{table}").ToList();
+			Assert.Equal(9, cars.Count);
+		}
+
+		[Fact]
+		public void ShouldGetTheLemondsFromUsingSqlWithIgnoreQueryFilters()
+		{
+			var entity = Context.Model.FindEntityType($"{typeof(Car).FullName}");
+			var table = entity.GetTableName();
+			var schema = entity.GetSchema();
+			var cars = Context.Cars.FromSqlRaw($"SELECT * FROM {schema}.{table}")
+				.IgnoreQueryFilters().ToList();
+			Assert.Equal(10, cars.Count);
+		}
+
+		[Fact]
+		public void ShouldGetOneCarUsingInterpolation()
+		{
+			int carId = 1;
+			var car = Context.Cars.FromSqlInterpolated($"SELECT * FROM dbo.Inventory WHERE Id == {carId}")
+				.Include(x => x.MakeNavigation)
+				.First();
+			Assert.Equal("Black", car.Color);
+			Assert.Equal("VW", car.MakeNavigation.Name);
+		}
+
+		[Theory]
+		[InlineData(1, 2)]
+		[InlineData(2, 1)]
+		[InlineData(3, 1)]
+		[InlineData(4, 2)]
+		[InlineData(5, 3)]
+		[InlineData(6, 1)]
+		public void ShouldGetAllCarsByMakingUseOfFromSql(int makeId, int expectedCount)
+		{
+
+			var entity = Context.Model.FindEntityType($"{typeof(Car).FullName}");
+			var tableName = entity.GetTableName();
+			var schema = entity.GetSchema();
+			var cars = Context.Cars.FromSqlRaw($"SELECT * FROM {schema}.{tableName}")
+				.Where(x => x.MakeId == makeId).ToList();
+			Assert.Equal(expectedCount, cars.Count);
+		}
+
 	}
 
 
