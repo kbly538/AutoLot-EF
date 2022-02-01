@@ -99,7 +99,7 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 		}
 
 		[Theory]
-		[InlineData(1, 2)]
+		[InlineData(1, 1)]
 		[InlineData(2, 1)]
 		[InlineData(3, 1)]
 		[InlineData(4, 2)]
@@ -157,7 +157,7 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 		public void ShouldGetOneCarUsingInterpolation()
 		{
 			int carId = 1;
-			var car = Context.Cars.FromSqlInterpolated($"SELECT * FROM dbo.Inventory WHERE Id == {carId}")
+			var car = Context.Cars.FromSqlInterpolated($"SELECT * FROM dbo.Inventory WHERE Id = {carId}")
 				.Include(x => x.MakeNavigation)
 				.First();
 			Assert.Equal("Black", car.Color);
@@ -165,7 +165,7 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 		}
 
 		[Theory]
-		[InlineData(1, 2)]
+		[InlineData(1, 1)]
 		[InlineData(2, 1)]
 		[InlineData(3, 1)]
 		[InlineData(4, 2)]
@@ -176,11 +176,74 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 
 			var entity = Context.Model.FindEntityType($"{typeof(Car).FullName}");
 			var tableName = entity.GetTableName();
-			var schema = entity.GetSchema();
-			var cars = Context.Cars.FromSqlRaw($"SELECT * FROM {schema}.{tableName}")
+			var schemaName = entity.GetSchema();
+			var cars = Context.Cars.FromSqlRaw($"SELECT * FROM {schemaName}.{tableName}")
 				.Where(x => x.MakeId == makeId).ToList();
 			Assert.Equal(expectedCount, cars.Count);
 		}
+
+		[Fact]
+		public void ShouldGetTheCountOfCars()
+		{
+			var count = Context.Cars.Count();
+			Assert.Equal(9, count);
+		}
+
+		[Fact]
+		public void ShouldGetTheCountOfCarsIgnoreQueryFilters()
+		{
+			var count = Context.Cars.IgnoreQueryFilters().Count();
+			Assert.Equal(10, count);
+		}
+
+		[Theory]
+		[InlineData(1, 1)]
+		[InlineData(2, 1)]
+		[InlineData(3, 1)]
+		[InlineData(4, 2)]
+		[InlineData(5, 3)]
+		[InlineData(6, 1)]
+		public void ShouldGetTheCountOfCarsByMakeP1(int makeId, int expectedCount)
+		{
+			var countByMake = Context.Cars.Count(x => x.MakeId == makeId);
+			Assert.Equal(expectedCount, countByMake);
+		}
+
+		[Theory]
+		[InlineData(1, 1)]
+		[InlineData(2, 1)]
+		[InlineData(3, 1)]
+		[InlineData(4, 2)]
+		[InlineData(5, 3)]
+		[InlineData(6, 1)]
+		public void ShouldGetTheCountOfCarsByMakeP2(int makeId, int expectedCount)
+		{
+			var countByMake = Context.Cars.Where(x => x.MakeId == makeId).Count();
+			Assert.Equal(expectedCount, countByMake);
+		}
+
+		[Theory]
+		[InlineData(1, true)]
+		[InlineData(11, false)]
+		public void ShouldCheckForAnyCarsWithMake(int makeId, bool expectedResult)
+		{
+			var query = Context.Cars.Any(x => x.MakeId == makeId);
+			Assert.Equal(expectedResult, query);
+		}
+
+		[Theory]
+		[InlineData(1, false)]
+		[InlineData(11, false)]
+		public void ShouldCheckForAllCarsWithMake(int makeId, bool expectedResult)
+		{
+			var query = Context.Cars.All(x => x.MakeId == makeId);
+			Assert.Equal(expectedResult, query);
+		}
+
+
+
+
+
 
 	}
 
