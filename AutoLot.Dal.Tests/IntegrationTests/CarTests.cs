@@ -77,6 +77,61 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 			});
 		}
 
+		[Fact]
+		public void ShouldGetReferenceRelatedInformationExplicitly()
+		{
+			var car = Context.Cars.First(x => x.Id == 1);
+			Assert.Null(car.MakeNavigation);
+			var query = Context.Entry(car).Reference(c => c.MakeNavigation).Query();
+			var qs = query.ToQueryString();
+			query.Load();
+			Assert.NotNull(car.MakeNavigation);
+		}
+
+		[Fact]
+		public void ShouldGetCollectionRelatedInformationExplicitly()
+		{
+			var car = Context.Cars.First(c => c.Id == 1);
+			var query = Context.Entry(car).Collection(c => c.Orders).Query();
+			var qs = query.ToQueryString();
+			query.Load();
+			Assert.Single(car.Orders);
+		}
+
+		[Theory]
+		[InlineData(1, 2)]
+		[InlineData(2, 1)]
+		[InlineData(3, 1)]
+		[InlineData(4, 2)]
+		[InlineData(5, 3)]
+		[InlineData(6, 1)]
+		public void ShouldGetAllCarsExplicitlyForAMakeWithQueryFilters(int makeId, int carCount)
+		{
+
+			var make = Context.Makes.First(x => x.Id == makeId);
+			IQueryable<Car> query = Context.Entry(make).Collection(c => c.Cars).Query();
+			var qs = query.ToQueryString();
+			query.Load();
+			Assert.Equal(carCount, make.Cars.Count());
+		}
+
+		[Theory]
+		[InlineData(1, 2)]
+		[InlineData(2, 1)]
+		[InlineData(3, 1)]
+		[InlineData(4, 2)]
+		[InlineData(5, 3)]
+		[InlineData(6, 1)]
+		public void ShouldGetAllCarsExplicitlyForAMakeWithoutQueryFilters(int makeId, int carCount)
+		{
+
+			var make = Context.Makes.First(x => x.Id == makeId);
+			IQueryable<Car> query = Context.Entry(make).Collection(c => c.Cars).Query().IgnoreQueryFilters();
+			var qs = query.ToQueryString();
+			query.Load();
+			Assert.Equal(carCount, make.Cars.Count());
+		}
+
 	}
 
 
