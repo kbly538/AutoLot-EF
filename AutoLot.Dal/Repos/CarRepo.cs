@@ -38,12 +38,12 @@ namespace AutoLot.Dal.Repos
 				ParameterName = "@petName",
 				SqlDbType = SqlDbType.NVarChar,
 				Size = 50,
-				Direction = ParameterDirection.Input
+				Direction = ParameterDirection.Output
 
 			};
 
-			_ = Context.Database.ExecuteSqlRaw(
-				"EXEC [dbo].[GetPetName] @carId, @petName OUTPUT", parameterId, parameterName);
+			var result = Context.Database.ExecuteSqlRaw(
+				"EXEC [dbo].[GetPetName] @carId, @petName OUTPUT", parameterId, parameterName);			
 			return (string) parameterName.Value;
 
 		}

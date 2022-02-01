@@ -1,4 +1,5 @@
-﻿using AutoLot.Dal.Tests.Base;
+﻿using AutoLot.Dal.Repos;
+using AutoLot.Dal.Tests.Base;
 using AutoLot.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -240,7 +241,20 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 			Assert.Equal(expectedResult, query);
 		}
 
-
+		[Theory]
+		[InlineData(1, "Zippy")]
+		[InlineData(2, "Rusty")]
+		[InlineData(3, "Mel")]
+		[InlineData(4, "Clunker")]
+		[InlineData(5, "Bimmer")]
+		[InlineData(6, "Hank")]
+		[InlineData(7, "Pinky")]
+		[InlineData(8, "Pete")]
+		[InlineData(9, "Brownie")]
+		public void ShouldGetValueFromStoredProc(int id, string expectedName)
+		{
+			Assert.Equal(expectedName, new CarRepo(Context).GetPetName(id));
+		}
 
 
 
