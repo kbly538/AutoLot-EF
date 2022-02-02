@@ -1,8 +1,11 @@
-﻿using AutoLot.Dal.Repos;
+﻿using AutoLot.Dal.Exceptions;
+using AutoLot.Dal.Repos;
 using AutoLot.Dal.Tests.Base;
 using AutoLot.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -363,6 +366,123 @@ namespace AutoLot.Dal.Tests.IntegrationTests
 			}
 		}
 
+		[Fact]
+		public void ShouldUpdateACar()
+		{
+			ExecuteInSharedTransaction((IDbContextTransaction trans) =>
+			{
+				var car = Context.Cars.First(c => c.Id == 1);
+				Assert.Equal("Black", car.Color);
+				car.Color = "White";
+				Context.SaveChanges();
+				Assert.Equal("White", car.Color);
+
+
+			});
+		}
+
+		[Fact]
+		public void ShouldUpdateACarUsingState()
+		{
+			
+			ExecuteInSharedTransaction(RunTheTest);
+		
+			void RunTheTest(IDbContextTransaction trans){
+				
+				var car = Context.Cars.AsNoTracking().First(x => x.Id == 1);
+				Assert.Equal("Black", car.Color);
+				var updatedCar = new Car
+				{
+					Color = "White",
+					Id = car.Id,
+					MakeId = car.MakeId,
+					PetName = car.PetName,
+					TimeStamp = car.TimeStamp,
+					IsDrivable = car.IsDrivable,
+				};
+				var context2 = TestHelpers.GetSecondContext(Context, trans);
+				context2.Entry(updatedCar).State = EntityState.Modified;
+				context2.SaveChanges();
+				var context3 = TestHelpers.GetSecondContext(Context, trans);
+				var car2 = context3.Cars.First(x => x.Id == 1);
+				Assert.Equal("White", car2.Color);
+			}
+		}
+
+		[Fact]
+		public void ShouldThrowConcurrencyException()
+		{
+			ExecuteInATransaction(RunTheTest);
+			
+			void RunTheTest()
+			{
+				var car = Context.Cars.First();
+				Context.Database.ExecuteSqlInterpolated(
+					$"Update dbo.Inventory set Color='Pink' where Id = {car.Id}"
+					);
+				car.Color = "Yellow";
+				var ex = Assert.Throws<CustomConcurrencyException>(
+					() => Context.SaveChanges()
+					);
+				var entry = ((DbUpdateConcurrencyException)ex.InnerException)?.Entries[0];
+				PropertyValues originalProps = entry.OriginalValues;
+				PropertyValues currentProps = entry.CurrentValues;
+				PropertyValues databaseProps = entry.GetDatabaseValues();
+			}
+
+		}
+
+		[Fact]
+		public void ShouldDeleteACar()
+		{
+			
+			ExecuteInATransaction(RunTheTest);
+			void RunTheTest()
+			{
+				var carCount = Context.Cars.Count();
+				var car = Context.Cars.First(c => c.Id == 2);
+				Context.Remove(car);
+				Context.SaveChanges();
+				var newCarCount = Context.Cars.Count();
+				Assert.Equal(carCount - 1, newCarCount);
+				Assert.Equal(
+					EntityState.Detached,
+					Context.Entry(car).State);
+			}
+
+		}
+
+		[Fact]
+		public void ShouldDeleteACarUsingState()
+		{
+			ExecuteInATransaction(RunTheTest);
+
+			void RunTheTest()
+			{
+				var carCount = Context.Cars.Count();
+				var car = Context.Cars.First(c => c.Id == 2);
+				Context.Entry(car).State = EntityState.Deleted;
+				Context.SaveChanges();
+				var newCarCount = Context.Cars.Count();
+				Assert.Equal(carCount - 1, newCarCount);
+				Assert.Equal(
+					EntityState.Detached,
+					Context.Entry(car).State);
+			}
+		}
+
+		[Fact]
+		public void ShouldFailToRemoveCar()
+		{
+			ExecuteInATransaction(RunTheTest);
+
+			void RunTheTest()
+			{
+				var car = Context.Cars.First(c => c.Id == 1);
+				Context.Cars.Remove(car);
+				Assert.Throws<CustomDbUpdateException>(() => Context.SaveChanges());
+			}
+		}
 
 	}
 
